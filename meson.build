@@ -1,3 +1,4 @@
 project('communicator', 'c')
-deps = dependency('libcurl')
-executable('communicator', 'main.c', dependencies : deps)
+curldep = dependency('libcurl')
+jsondep = dependency('json-c')
+executable('communicator', 'main.c', dependencies : [curldep, jsondep])
