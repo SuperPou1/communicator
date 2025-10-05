@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
 	struct json_object *commandjson = json_object_new_object();;
 	struct json_object *responsejson;
 	struct json_object *confjson;
+	enum json_tokener_error responsestate;
 
 	strcpy(confpath, getenv("HOME"));
 	strcat(confpath,"/.config/communicator/");
@@ -124,7 +125,12 @@ int main(int argc, char *argv[]) {
 	curl_easy_setopt(handle, CURLOPT_POSTFIELDS, json_object_to_json_string(commandjson));
 	curl_easy_perform(handle);
 
-	responsejson = json_tokener_parse(response.data);
+	responsejson = json_tokener_parse_verbose(response.data, &responsestate);
+	if (responsestate > json_tokener_continue) { // anything higher than json_tokener_continue is an error
+		printf("Something went wrong while parsing response JSON\n");
+		return 1;
+	}
+
 	json_object_object_add(responsejson, "Server", json_object_new_string(server)); // add the server to the returned request to write it to config
 	printf("Welcome to communicator!\n%s\n", json_object_to_json_string_ext(responsejson, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY)); // debug
 	const char *responsestr = json_object_to_json_string(responsejson);
